@@ -1,0 +1,237 @@
+*claude-code.txt*  Claude Code integration for Neovim
+
+================================================================================
+CLAUDE CODE PLUGIN                                               *claude-code*
+
+Enhanced Claude Code integration for Neovim. Provides AI-assisted coding features
+using the Claude Code CLI (https://claude.ai/code).
+
+================================================================================
+CONTENTS                                               *claude-code-contents*
+
+1. Introduction ................................ |claude-code-introduction|
+2. Requirements ............................... |claude-code-requirements|
+3. Installation ............................... |claude-code-installation|
+4. Configuration .............................. |claude-code-configuration|
+5. Commands ................................... |claude-code-commands|
+6. Keybindings ................................ |claude-code-keybindings|
+7. Templates .................................. |claude-code-templates|
+8. License .................................... |claude-code-license|
+
+================================================================================
+INTRODUCTION                                       *claude-code-introduction*
+
+Claude Code Neovim is a plugin that integrates Anthropic's Claude Code CLI with
+Neovim, providing seamless AI assistance for your coding tasks. It offers a
+variety of features such as code explanation, refactoring, review, debugging,
+generation of tests, commit messages, and PR descriptions.
+
+================================================================================
+REQUIREMENTS                                       *claude-code-requirements*
+
+- Neovim 0.7.0+
+- Claude Code CLI installed and in your PATH
+  (Download from https://claude.ai/code)
+- plenary.nvim plugin (https://github.com/nvim-lua/plenary.nvim)
+
+================================================================================
+INSTALLATION                                       *claude-code-installation*
+
+Using packer.nvim:>
+  use {
+    'pauldub/claude-code-nvim',
+    requires = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      require('claude-code').setup({})
+    end
+  }
+<
+
+Using lazy.nvim:>
+  {
+    'pauldub/claude-code-nvim',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      require('claude-code').setup({})
+    end
+  }
+<
+
+================================================================================
+CONFIGURATION                                     *claude-code-configuration*
+
+Claude Code Neovim can be configured with these options:>
+
+  require('claude-code').setup({
+    -- Path to Claude Code CLI executable
+    claude_path = vim.fn.expand('~/.claude/local/claude'),
+
+    -- Default options for Claude CLI
+    claude_options = '',
+
+    -- File path for custom CLAUDE.md memory file
+    memory_path = vim.fn.expand('~/.claude/CLAUDE.md'),
+
+    -- Whether to use a floating window for output (true) or buffer (false)
+    use_floating = true,
+
+    -- Max height/width of floating window as percentage of screen
+    float_height_pct = 0.8,
+    float_width_pct = 0.8,
+
+    -- Whether to show thinking in extended mode
+    show_thinking = false,
+
+    -- Default MCP server to use (if any)
+    mcp_server = nil,
+
+    -- Whether to enable debug mode (--debug)
+    debug_mode = false,
+
+    -- Whether to enable MCP debug mode (--mcp-debug)
+    mcp_debug = false,
+
+    -- Whether to log Claude CLI invocations to a log file
+    log_commands = true,
+
+    -- Path for Claude CLI log file
+    log_file = nil, -- defaults to stdpath("cache")/claude_cli.log
+
+    -- Output format: "text" (default), "json", or "stream-json"
+    output_format = 'text',
+
+    -- Allowed tools (comma or space-separated list like "Bash Edit")
+    allowed_tools = nil,
+
+    -- Whether to use JSON parsing for programmatic access to responses
+    parse_json = false,
+
+    -- Default Git base branch for PR comparisons
+    git_base_branch = 'main',
+
+    -- Request timeout in seconds
+    timeout = 60,
+
+    -- Minimum required Claude CLI version (semver)
+    min_version = '0.2.70',
+  })
+<
+
+================================================================================
+COMMANDS                                             *claude-code-commands*
+
+*:ClaudeReview*
+  Review selected code with Claude (visual mode).
+
+*:ClaudeCommit*
+  Generate a git commit message with Claude based on staged changes.
+
+*:ClaudePR*
+  Generate a pull request description with Claude based on branch diff.
+
+*:ClaudeExplain*
+  Explain selected code with Claude (visual mode).
+
+*:ClaudeRefactor*
+  Refactor selected code with Claude (visual mode).
+
+*:ClaudeDebug*
+  Debug selected code with Claude (visual mode).
+  Prompts for error message.
+
+*:ClaudeTest*
+  Generate tests for selected code with Claude (visual mode).
+
+*:ClaudeMemory*
+  Edit Claude Memory file.
+
+*:ClaudeCodebase*
+  Get codebase overview with Claude.
+
+*:Claude* {prompt}
+  Ask Claude a question.
+
+*:ClaudeTemplateEdit* [template]
+  Edit a template. If no template name is provided, shows a selection menu.
+
+*:ClaudeTemplateReset* [template]
+  Reset a template to default. If no template name is provided, shows a menu.
+
+*:ClaudeTemplateList*
+  List all available templates.
+
+================================================================================
+KEYBINDINGS                                         *claude-code-keybindings*
+
+Claude Code adds keybindings under <leader>a namespace for AI operations:
+
+Normal mode:~
+  <leader>ac  - Generate commit message with Claude
+  <leader>ap  - Generate PR description with Claude
+  <leader>am  - Edit Claude Memory file
+  <leader>ao  - Get codebase overview with Claude
+  <leader>aq  - Ask Claude a question (opens command with prompt)
+  <leader>ate - Edit Claude template
+  <leader>atr - Reset Claude template to default
+  <leader>atl - List all Claude templates
+
+Visual mode:~
+  <leader>ar  - Review selected code with Claude
+  <leader>ae  - Explain selected code with Claude
+  <leader>af  - Refactor selected code with Claude
+  <leader>ad  - Debug selected code with Claude
+  <leader>at  - Generate tests for selected code with Claude
+
+================================================================================
+TEMPLATES                                           *claude-code-templates*
+
+Claude Code uses customizable templates for different operations. Templates
+are stored in `{config_dir}/templates/claude-code/` with .tpl extension.
+
+Available templates:
+
+- commit: Generate git commit messages
+- pr: Generate pull request descriptions
+- review: Code review
+- debug: Debug assistance
+- explain: Code explanation
+- refactor: Code refactoring
+- test: Test generation
+- codebase: Codebase overview
+
+You can edit templates via `:ClaudeTemplateEdit` command or directly edit the
+files in the templates directory.
+
+Templates support these placeholders:
+
+- {{code}}: The selected code
+- {{filepath}}: The current file path
+- {{filetype}}: The current file type
+- {{diff}}: Git diff for commit messages
+- {{changes}}: Changes for PR descriptions
+- {{error}}: Error message for debugging
+
+================================================================================
+LICENSE                                               *claude-code-license*
+
+MIT License
+
+Copyright (c) 2024 Paul Hubert
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
