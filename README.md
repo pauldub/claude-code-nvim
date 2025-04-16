@@ -2,7 +2,7 @@
 
 An enhanced Claude Code integration for Neovim. Provides AI-assisted coding features using Claude Code CLI.
 
-![Claude Code Neovim](https://github.com/pauldub/claude-code-nvim/assets/screenshot.png)
+![Claude Code Neovim](https://github.com/pauldub/claude-code-nvim/blob/main/assets/screenshot.png?raw=true)
 
 ## Features
 
