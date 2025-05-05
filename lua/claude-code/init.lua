@@ -244,7 +244,7 @@ function M.ask_claude(question)
 		question = table.concat(question, " ")
 	end
 
-	if question:trim() == "" then
+	if question:gsub("%s+", "") == "" then
 		ui.notify("Empty question provided", vim.log.levels.ERROR)
 		return
 	end
@@ -338,4 +338,3 @@ function M.open_memory_file()
 end
 
 return M
-

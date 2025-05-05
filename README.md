@@ -151,6 +151,34 @@ Available templates:
 
 You can edit templates via `:ClaudeTemplateEdit` command or directly edit the files in the templates directory.
 
+## Testing
+
+The plugin includes a comprehensive test suite using the mini.test framework:
+
+### Running Tests
+
+The simplest way to run all tests:
+
+```bash
+./run_tests.sh
+```
+
+To run a specific test file:
+
+```bash
+cd tests
+./run_single_test.sh test_claude_code.lua
+```
+
+### Test Structure
+
+The tests use mocks for:
+- `plenary.job` to avoid actual CLI calls
+- UI elements to avoid displaying windows
+- No actual Claude CLI installation required
+
+See the [tests/README.md](tests/README.md) for more detailed information on testing.
+
 ## License
 
 MIT License
