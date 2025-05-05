@@ -5,25 +5,25 @@ local M = {}
 
 -- Get user config directory for optional custom templates
 local function get_user_template_dir()
-  local config_dir = vim.fn.stdpath('config')
-  return vim.fn.expand(config_dir .. '/templates/claude-code')
+	local config_dir = vim.fn.stdpath("config")
+	return vim.fn.expand(config_dir .. "/templates/claude-code")
 end
 
 -- Load a custom template if it exists, otherwise return the default
 local function load_template(template_name, default_template)
-  local template_dir = get_user_template_dir()
-  local template_file = template_dir .. '/' .. template_name .. '.tpl'
-  
-  -- Try to read custom template
-  local f = io.open(template_file, 'r')
-  if f then
-    local content = f:read('*all')
-    f:close()
-    return content
-  end
-  
-  -- Return default template if no custom one exists
-  return default_template
+	local template_dir = get_user_template_dir()
+	local template_file = template_dir .. "/" .. template_name .. ".tpl"
+
+	-- Try to read custom template
+	local f = io.open(template_file, "r")
+	if f then
+		local content = f:read("*all")
+		f:close()
+		return content
+	end
+
+	-- Return default template if no custom one exists
+	return default_template
 end
 
 -- Default templates
@@ -147,144 +147,144 @@ Be concise but thorough, focusing on what's most important for a developer to un
 
 -- Create metatable for lazy-loading templates and supporting custom templates
 local mt = {
-  __index = function(t, k)
-    -- Check if we have a default template
-    if default_templates[k] then
-      -- Load template (possibly custom)
-      local template = load_template(k, default_templates[k])
-      
-      -- Cache the template
-      rawset(t, k, template)
-      
-      return template
-    end
-    return nil
-  end
+	__index = function(t, k)
+		-- Check if we have a default template
+		if default_templates[k] then
+			-- Load template (possibly custom)
+			local template = load_template(k, default_templates[k])
+
+			-- Cache the template
+			rawset(t, k, template)
+
+			return template
+		end
+		return nil
+	end,
 }
 
 setmetatable(M, mt)
 
 -- Function to create custom template directory if it doesn't exist
 function M.ensure_template_dir()
-  local template_dir = get_user_template_dir()
-  
-  -- Check if directory exists
-  if vim.fn.isdirectory(template_dir) == 0 then
-    -- Create directory
-    local ok, err = pcall(vim.fn.mkdir, template_dir, 'p')
-    if not ok then
-      vim.notify('Failed to create template directory: ' .. err, vim.log.levels.ERROR)
-      return false
-    end
-    return true
-  end
-  
-  return true
+	local template_dir = get_user_template_dir()
+
+	-- Check if directory exists
+	if vim.fn.isdirectory(template_dir) == 0 then
+		-- Create directory
+		local ok, err = pcall(vim.fn.mkdir, template_dir, "p")
+		if not ok then
+			vim.notify("Failed to create template directory: " .. err, vim.log.levels.ERROR)
+			return false
+		end
+		return true
+	end
+
+	return true
 end
 
 -- Function to save a custom template
 function M.save_custom_template(name, content)
-  -- Ensure template directory exists
-  if not M.ensure_template_dir() then
-    return false
-  end
-  
-  local template_dir = get_user_template_dir()
-  local template_file = template_dir .. '/' .. name .. '.tpl'
-  
-  -- Write template to file
-  local f = io.open(template_file, 'w')
-  if not f then
-    vim.notify('Failed to create custom template file', vim.log.levels.ERROR)
-    return false
-  end
-  
-  f:write(content)
-  f:close()
-  
-  -- Clear cached template to load the new one
-  rawset(M, name, nil)
-  
-  vim.notify('Saved custom template: ' .. name, vim.log.levels.INFO)
-  return true
+	-- Ensure template directory exists
+	if not M.ensure_template_dir() then
+		return false
+	end
+
+	local template_dir = get_user_template_dir()
+	local template_file = template_dir .. "/" .. name .. ".tpl"
+
+	-- Write template to file
+	local f = io.open(template_file, "w")
+	if not f then
+		vim.notify("Failed to create custom template file", vim.log.levels.ERROR)
+		return false
+	end
+
+	f:write(content)
+	f:close()
+
+	-- Clear cached template to load the new one
+	rawset(M, name, nil)
+
+	vim.notify("Saved custom template: " .. name, vim.log.levels.INFO)
+	return true
 end
 
 -- Function to edit a template
 function M.edit_template(name)
-  -- Check if template exists
-  if not default_templates[name] then
-    vim.notify('Template not found: ' .. name, vim.log.levels.ERROR)
-    return
-  end
-  
-  -- Ensure template directory exists
-  M.ensure_template_dir()
-  
-  local template_dir = get_user_template_dir()
-  local template_file = template_dir .. '/' .. name .. '.tpl'
-  
-  -- If custom template doesn't exist, create it from default
-  local f = io.open(template_file, 'r')
-  if not f then
-    f = io.open(template_file, 'w')
-    if f then
-      f:write(default_templates[name])
-      f:close()
-    else
-      vim.notify('Failed to create template file', vim.log.levels.ERROR)
-      return
-    end
-  else
-    f:close()
-  end
-  
-  -- Open template for editing
-  vim.cmd('edit ' .. vim.fn.fnameescape(template_file))
+	-- Check if template exists
+	if not default_templates[name] then
+		vim.notify("Template not found: " .. name, vim.log.levels.ERROR)
+		return
+	end
+
+	-- Ensure template directory exists
+	M.ensure_template_dir()
+
+	local template_dir = get_user_template_dir()
+	local template_file = template_dir .. "/" .. name .. ".tpl"
+
+	-- If custom template doesn't exist, create it from default
+	local f = io.open(template_file, "r")
+	if not f then
+		f = io.open(template_file, "w")
+		if f then
+			f:write(default_templates[name])
+			f:close()
+		else
+			vim.notify("Failed to create template file", vim.log.levels.ERROR)
+			return
+		end
+	else
+		f:close()
+	end
+
+	-- Open template for editing
+	vim.cmd("edit " .. vim.fn.fnameescape(template_file))
 end
 
 -- List all available templates
 function M.list_templates()
-  local templates = {}
-  
-  -- Add default templates
-  for name, _ in pairs(default_templates) do
-    table.insert(templates, name)
-  end
-  
-  -- Add any custom templates not in defaults
-  local template_dir = get_user_template_dir()
-  if vim.fn.isdirectory(template_dir) == 1 then
-    local custom_templates = vim.fn.glob(template_dir .. '/*.tpl')
-    for _, file in ipairs(vim.fn.split(custom_templates, '\n')) do
-      local name = vim.fn.fnamemodify(file, ':t:r')
-      if not vim.tbl_contains(templates, name) then
-        table.insert(templates, name)
-      end
-    end
-  end
-  
-  return templates
+	local templates = {}
+
+	-- Add default templates
+	for name, _ in pairs(default_templates) do
+		table.insert(templates, name)
+	end
+
+	-- Add any custom templates not in defaults
+	local template_dir = get_user_template_dir()
+	if vim.fn.isdirectory(template_dir) == 1 then
+		local custom_templates = vim.fn.glob(template_dir .. "/*.tpl")
+		for _, file in ipairs(vim.fn.split(custom_templates, "\n")) do
+			local name = vim.fn.fnamemodify(file, ":t:r")
+			if not vim.tbl_contains(templates, name) then
+				table.insert(templates, name)
+			end
+		end
+	end
+
+	return templates
 end
 
 -- Reset a custom template to default
 function M.reset_template(name)
-  -- Check if template exists in defaults
-  if not default_templates[name] then
-    vim.notify('Default template not found: ' .. name, vim.log.levels.ERROR)
-    return false
-  end
-  
-  local template_dir = get_user_template_dir()
-  local template_file = template_dir .. '/' .. name .. '.tpl'
-  
-  -- Remove custom template if it exists
-  os.remove(template_file)
-  
-  -- Clear cached template
-  rawset(M, name, nil)
-  
-  vim.notify('Reset template to default: ' .. name, vim.log.levels.INFO)
-  return true
+	-- Check if template exists in defaults
+	if not default_templates[name] then
+		vim.notify("Default template not found: " .. name, vim.log.levels.ERROR)
+		return false
+	end
+
+	local template_dir = get_user_template_dir()
+	local template_file = template_dir .. "/" .. name .. ".tpl"
+
+	-- Remove custom template if it exists
+	os.remove(template_file)
+
+	-- Clear cached template
+	rawset(M, name, nil)
+
+	vim.notify("Reset template to default: " .. name, vim.log.levels.INFO)
+	return true
 end
 
 return M
