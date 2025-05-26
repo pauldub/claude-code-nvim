@@ -28,6 +28,8 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ## Usage
 
+### Normal Mode
+
 ```vim
 :Claude <your prompt>
 ```
@@ -36,6 +38,18 @@ Examples:
 - `:Claude explain this function`
 - `:Claude refactor for better performance`
 - `:Claude write tests for this code`
+
+### Visual Mode
+
+Select code and run `:Claude` to analyze it:
+
+1. Select code in visual mode (`v`, `V`, or `<C-v>`)
+2. Type `:Claude` (or `:'<,'>Claude`)
+3. Optionally add a prompt: `:'<,'>Claude explain this function`
+
+When used in visual mode:
+- Without prompt: sends just the selected code
+- With prompt: sends both your prompt and the selected code
 
 The output will open in a new split buffer with markdown syntax highlighting.
 

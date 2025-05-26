@@ -45,7 +45,7 @@ describe("claude-code", function()
         table.insert(messages, {msg = msg, level = level})
       end
       
-      claude_code.claude_command("")
+      claude_code.claude_command("", {})
       
       assert.equals(1, #messages)
       assert.equals("Usage: :Claude <prompt>", messages[1].msg)
@@ -61,12 +61,61 @@ describe("claude-code", function()
         table.insert(messages, {msg = msg, level = level})
       end
       
-      claude_code.claude_command("   ")
+      claude_code.claude_command("   ", {})
       
       assert.equals(1, #messages)
       assert.equals("Usage: :Claude <prompt>", messages[1].msg)
       assert.equals(vim.log.levels.ERROR, messages[1].level)
       
+      vim.notify = original_notify
+    end)
+    
+    it("should work with visual selection", function()
+      -- Setup a buffer with some content
+      vim.api.nvim_buf_set_lines(0, 0, -1, false, {
+        "function test()",
+        "  return 42",
+        "end"
+      })
+      
+      -- Mock visual selection positions
+      local original_getpos = vim.fn.getpos
+      vim.fn.getpos = function(mark)
+        if mark == "'<" then
+          return {0, 1, 1, 0}  -- Start of first line
+        elseif mark == "'>" then
+          return {0, 3, 4, 0}  -- End of third line
+        end
+        return {0, 0, 0, 0}
+      end
+      
+      -- Mock executable and run
+      local original_executable = vim.fn.executable
+      vim.fn.executable = function() return 1 end
+      
+      local messages = {}
+      local original_notify = vim.notify
+      vim.notify = function(msg, level)
+        table.insert(messages, {msg = msg, level = level})
+      end
+      
+      -- Simulate visual mode command with prompt
+      claude_code.claude_command("explain this code", {range = 2})
+      
+      -- Should see "Running Claude..." message
+      assert.is_true(#messages > 0)
+      local found_running = false
+      for _, msg in ipairs(messages) do
+        if msg.msg == "Running Claude..." then
+          found_running = true
+          break
+        end
+      end
+      assert.is_true(found_running)
+      
+      -- Cleanup
+      vim.fn.getpos = original_getpos
+      vim.fn.executable = original_executable
       vim.notify = original_notify
     end)
   end)

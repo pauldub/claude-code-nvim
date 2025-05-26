@@ -50,13 +50,24 @@ Using packer.nvim: >lua
 COMMANDS                                                    *claude-code-commands*
 
                                                                         *:Claude*
-:Claude {prompt}      Send a prompt to Claude and display the response in a
+:Claude [{prompt}]    Send a prompt to Claude and display the response in a
                       new split buffer with markdown syntax highlighting.
+                      
+                      Can be used in visual mode to send selected text:
+                      - Select text, then `:Claude` sends just the selection
+                      - Select text, then `:Claude explain this` sends both
+                        prompt and selection
 
-                      Examples:
+                      Normal mode examples:
                       `:Claude explain this function`
                       `:Claude refactor for better performance`
                       `:Claude write tests for this code`
+                      
+                      Visual mode examples:
+                      Select code, then:
+                      `:'<,'>Claude` - analyze selected code
+                      `:'<,'>Claude explain` - explain selected code
+                      `:'<,'>Claude refactor` - refactor selected code
 
 ==============================================================================
 CONFIGURATION                                          *claude-code-configuration*

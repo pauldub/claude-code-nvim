@@ -182,19 +182,64 @@ local function show_in_split(content)
 	vim.api.nvim_win_set_buf(win, buf)
 end
 
+---Get visual selection text
+---@return string[] lines Selected lines
+---@return number start_line Start line (1-indexed)
+---@return number end_line End line (1-indexed)
+---@private
+local function get_visual_selection()
+	local _, start_line, start_col = unpack(vim.fn.getpos("'<"))
+	local _, end_line, end_col = unpack(vim.fn.getpos("'>"))
+	
+	-- Get lines
+	local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+	
+	-- Handle partial selection on first and last lines
+	if #lines > 0 then
+		-- Adjust first line
+		lines[1] = string.sub(lines[1], start_col)
+		-- Adjust last line
+		if #lines > 1 then
+			lines[#lines] = string.sub(lines[#lines], 1, end_col)
+		else
+			-- Single line selection
+			lines[1] = string.sub(lines[1], 1, end_col - start_col + 1)
+		end
+	end
+	
+	return lines, start_line, end_line
+end
+
 ---Execute Claude command
 ---@param args string Command arguments
-function M.claude_command(args)
+---@param range? table Range information from command
+function M.claude_command(args, range)
 	-- Validate and clean input
 	args = vim.trim(args or "")
-	if args == "" then
+	
+	local prompt = args
+	local selected_text = nil
+	
+	-- Check if we have a visual selection
+	if range and range.range and range.range > 0 then
+		local lines = get_visual_selection()
+		selected_text = table.concat(lines, "\n")
+		
+		if prompt == "" then
+			-- If no prompt provided, just send the selection
+			prompt = selected_text
+		else
+			-- Combine prompt with selection
+			prompt = prompt .. "\n\n" .. selected_text
+		end
+	elseif prompt == "" then
 		vim.notify("Usage: :Claude <prompt>", vim.log.levels.ERROR)
 		return
 	end
 
 	vim.notify("Running Claude...", vim.log.levels.INFO)
 
-	local ok, result, metadata = pcall(M.run, args)
+	local ok, result, metadata = pcall(M.run, prompt)
 
 	if not ok then
 		vim.notify("Error: " .. tostring(result), vim.log.levels.ERROR)
@@ -232,10 +277,11 @@ function M.setup(user_config)
 	end
 
 	vim.api.nvim_create_user_command("Claude", function(opts)
-		M.claude_command(opts.args)
+		M.claude_command(opts.args, opts)
 	end, {
-		nargs = "+",
+		nargs = "*",
 		desc = "Run Claude with a prompt",
+		range = true,
 	})
 end
 
