@@ -99,12 +99,33 @@ show_metadata         Whether to display metadata (cost, duration, session ID)
 debug                 Enable debug logging to see detailed execution
                       information. Default: false
 
+                                                  *claude-code-config.allowed_tools*
+allowed_tools         Comma/space-separated string or array of allowed tools.
+                      Controls which tools Claude can use. Default: nil (all allowed)
+                      
+                      Examples:
+                      - "Bash,Edit" - allow only Bash and Edit tools
+                      - "Bash(npm install)" - allow only specific Bash commands
+                      - {"Read", "Write", "Edit"} - as an array
+                      - "mcp__filesystem__*" - allow all filesystem MCP tools
+
+                                                *claude-code-config.disallowed_tools*
+disallowed_tools      Comma/space-separated string or array of disallowed tools.
+                      Prevents Claude from using specific tools. Default: nil
+                      
+                      Examples:
+                      - "Bash(git commit)" - prevent git commits
+                      - {"Write", "Delete"} - prevent file modifications
+                      - "mcp__github__*" - block all GitHub MCP tools
+
 Example configuration: >lua
   require('claude-code').setup({
     timeout = 180000,  -- 3 minute timeout
     split_direction = "vertical",
     output_format = "json",  -- structured output with metadata
-    show_metadata = true  -- display cost and timing info
+    show_metadata = true,  -- display cost and timing info
+    allowed_tools = "Bash,Edit,Read",  -- restrict to specific tools
+    disallowed_tools = {"Bash(rm -rf)"} -- prevent dangerous commands
   })
 <
 

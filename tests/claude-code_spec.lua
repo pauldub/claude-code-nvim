@@ -24,7 +24,9 @@ describe("claude-code", function()
         split_direction = "vertical",
         output_format = "text",
         show_metadata = true,
-        debug = true
+        debug = true,
+        allowed_tools = "Bash(npm install),Edit",
+        disallowed_tools = {"Bash(git commit)", "Write"}
       })
     end)
     
@@ -132,6 +134,83 @@ describe("claude-code", function()
       end, "Claude CLI not found. Please install from https://claude.ai/code")
       
       vim.fn.executable = original_executable
+    end)
+    
+    it("should include tool options in command", function()
+      -- Setup with tool restrictions
+      claude_code.setup({
+        allowed_tools = "Bash,Edit",
+        disallowed_tools = {"Write", "Delete"}
+      })
+      
+      -- Mock executable
+      local original_executable = vim.fn.executable
+      vim.fn.executable = function() return 1 end
+      
+      -- Mock vim.system to capture the command
+      local captured_cmd = nil
+      local original_system = vim.system
+      if vim.system then
+        vim.system = function(cmd, opts)
+          captured_cmd = cmd
+          return {
+            wait = function()
+              return {
+                code = 0,
+                stdout = vim.json.encode({
+                  type = "result",
+                  subtype = "success",
+                  result = "Test",
+                  session_id = "test"
+                })
+              }
+            end
+          }
+        end
+      else
+        -- Mock vim.fn.system for older Neovim
+        local original_fn_system = vim.fn.system
+        vim.fn.system = function(cmd_str)
+          -- Extract command from string (basic parsing)
+          captured_cmd = {"claude"}
+          for part in cmd_str:gmatch("%S+") do
+            table.insert(captured_cmd, part:gsub("^'(.+)'$", "%1"))
+          end
+          return vim.json.encode({
+            type = "result",
+            subtype = "success",
+            result = "Test",
+            session_id = "test"
+          })
+        end
+        vim.fn.system = original_fn_system
+      end
+      
+      -- Run command
+      claude_code.run("test")
+      
+      -- Verify command includes tool options
+      if captured_cmd then
+        local found_allowed = false
+        local found_disallowed = false
+        for i, arg in ipairs(captured_cmd) do
+          if arg == "--allowedTools" then
+            found_allowed = true
+            assert.equals("Bash,Edit", captured_cmd[i + 1])
+          elseif arg == "--disallowedTools" then
+            found_disallowed = true
+            assert.equals("Write,Delete", captured_cmd[i + 1])
+          end
+        end
+        assert.is_true(found_allowed, "Should include --allowedTools")
+        assert.is_true(found_disallowed, "Should include --disallowedTools")
+      end
+      
+      -- Cleanup
+      vim.fn.executable = original_executable
+      if original_system then
+        vim.system = original_system
+      end
     end)
   end)
 end)

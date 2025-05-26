@@ -17,6 +17,8 @@ local M = {}
 ---@field output_format? "text"|"json"|"stream-json" Output format (default: "json")
 ---@field show_metadata? boolean Show metadata in output (default: false)
 ---@field debug? boolean Enable debug logging (default: false)
+---@field allowed_tools? string|string[] Comma/space-separated list or array of allowed tools
+---@field disallowed_tools? string|string[] Comma/space-separated list or array of disallowed tools
 
 -- Private config table
 local config = {
@@ -25,6 +27,8 @@ local config = {
 	output_format = "json",
 	show_metadata = false,
 	debug = false,
+	allowed_tools = nil,
+	disallowed_tools = nil,
 }
 
 ---@class ClaudeResult
@@ -122,6 +126,23 @@ function M.run(prompt)
 	end
 	
 	local cmd = { "claude", "-p", prompt, "--output-format", config.output_format }
+	
+	-- Add tool restrictions if configured
+	if config.allowed_tools then
+		local tools_str = type(config.allowed_tools) == "table" 
+			and table.concat(config.allowed_tools, ",")
+			or config.allowed_tools
+		table.insert(cmd, "--allowedTools")
+		table.insert(cmd, tools_str)
+	end
+	
+	if config.disallowed_tools then
+		local tools_str = type(config.disallowed_tools) == "table"
+			and table.concat(config.disallowed_tools, ",")
+			or config.disallowed_tools
+		table.insert(cmd, "--disallowedTools")
+		table.insert(cmd, tools_str)
+	end
 	
 	debug_log("Running claude with prompt: " .. prompt)
 	

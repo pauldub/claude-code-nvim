@@ -67,8 +67,30 @@ require('claude-code').setup({
   split_direction = "vertical",  -- Split direction: "horizontal" or "vertical"
   output_format = "json",  -- Output format: "text", "json" (default), or "stream-json"
   show_metadata = true,  -- Show cost and timing info (default: false)
-  debug = false  -- Enable debug logging (default: false)
+  debug = false,  -- Enable debug logging (default: false)
+  
+  -- Tool restrictions (optional)
+  allowed_tools = "Bash,Edit,Read",  -- String or array of allowed tools
+  disallowed_tools = {  -- String or array of disallowed tools
+    "Bash(git push)",
+    "Bash(rm -rf)",
+    "Write"
+  }
 })
+```
+
+### Tool Restrictions
+
+ Control which tools Claude can use:
+
+- **allowed_tools**: Whitelist specific tools or commands
+  - `"Bash"` - allow all Bash commands
+  - `"Bash(npm install)"` - allow only specific commands
+  - `"mcp__filesystem__*"` - allow MCP tool patterns
+  
+- **disallowed_tools**: Blacklist dangerous operations
+  - `"Bash(git commit)"` - prevent git commits
+  - `{"Write", "Delete"}` - prevent file modifications
 ```
 
 ## License
