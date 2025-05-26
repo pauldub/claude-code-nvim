@@ -1,237 +1,122 @@
-*claude-code.txt*  Claude Code integration for Neovim
+*claude-code.txt*    Minimal Claude Code integration for Neovim
 
-================================================================================
-CLAUDE CODE PLUGIN                                               *claude-code*
+==============================================================================
+CONTENTS                                                    *claude-code-contents*
 
-Enhanced Claude Code integration for Neovim. Provides AI-assisted coding features
-using the Claude Code CLI (https://claude.ai/code).
+  1. Introduction .......................... |claude-code-introduction|
+  2. Setup ................................. |claude-code-setup|
+  3. Commands .............................. |claude-code-commands|
+  4. Configuration ......................... |claude-code-configuration|
+  5. API ................................... |claude-code-api|
 
-================================================================================
-CONTENTS                                               *claude-code-contents*
+==============================================================================
+INTRODUCTION                                            *claude-code-introduction*
 
-1. Introduction ................................ |claude-code-introduction|
-2. Requirements ............................... |claude-code-requirements|
-3. Installation ............................... |claude-code-installation|
-4. Configuration .............................. |claude-code-configuration|
-5. Commands ................................... |claude-code-commands|
-6. Keybindings ................................ |claude-code-keybindings|
-7. Templates .................................. |claude-code-templates|
-8. License .................................... |claude-code-license|
+Claude Code Neovim provides a minimal integration with Claude Code CLI,
+offering a single command to interact with Claude AI directly from Neovim.
 
-================================================================================
-INTRODUCTION                                       *claude-code-introduction*
+Requirements:
+- Neovim >= 0.5
+- Claude Code CLI installed (https://claude.ai/code)
 
-Claude Code Neovim is a plugin that integrates Anthropic's Claude Code CLI with
-Neovim, providing seamless AI assistance for your coding tasks. It offers a
-variety of features such as code explanation, refactoring, review, debugging,
-generation of tests, commit messages, and PR descriptions.
+==============================================================================
+SETUP                                                          *claude-code-setup*
 
-================================================================================
-REQUIREMENTS                                       *claude-code-requirements*
+Add to your Neovim configuration:
 
-- Neovim 0.7.0+
-- Claude Code CLI installed and in your PATH
-  (Download from https://claude.ai/code)
-- plenary.nvim plugin (https://github.com/nvim-lua/plenary.nvim)
+Using lazy.nvim: >lua
+  {
+    "pauldub/claude-code-nvim",
+    config = function()
+      require('claude-code').setup({
+        -- Configuration options (optional)
+        timeout = 30000,  -- milliseconds
+        split_direction = "horizontal"  -- or "vertical"
+      })
+    end
+  }
+<
 
-================================================================================
-INSTALLATION                                       *claude-code-installation*
-
-Using packer.nvim:>
+Using packer.nvim: >lua
   use {
     'pauldub/claude-code-nvim',
-    requires = { 'nvim-lua/plenary.nvim' },
     config = function()
-      require('claude-code').setup({})
+      require('claude-code').setup()
     end
   }
 <
 
-Using lazy.nvim:>
-  {
-    'pauldub/claude-code-nvim',
-    dependencies = { 'nvim-lua/plenary.nvim' },
-    config = function()
-      require('claude-code').setup({})
-    end
-  }
-<
+==============================================================================
+COMMANDS                                                    *claude-code-commands*
 
-================================================================================
-CONFIGURATION                                     *claude-code-configuration*
+                                                                        *:Claude*
+:Claude {prompt}      Send a prompt to Claude and display the response in a
+                      new split buffer with markdown syntax highlighting.
 
-Claude Code Neovim can be configured with these options:>
+                      Examples:
+                      `:Claude explain this function`
+                      `:Claude refactor for better performance`
+                      `:Claude write tests for this code`
 
+==============================================================================
+CONFIGURATION                                          *claude-code-configuration*
+
+The setup function accepts a configuration table with the following options:
+
+                                                         *claude-code-config.timeout*
+timeout               Number of milliseconds before the Claude command times
+                      out. Default: 60000 (1 minute)
+
+                                                 *claude-code-config.split_direction*
+split_direction       Direction to open the output split. Can be "horizontal"
+                      or "vertical". Default: "horizontal"
+
+                                                   *claude-code-config.output_format*
+output_format         Output format for Claude responses. Can be "text", "json",
+                      or "stream-json". Default: "json"
+                      
+                      - "text": Plain text output
+                      - "json": Structured JSON with metadata (recommended)
+                      - "stream-json": Streaming JSON for real-time output
+
+                                                   *claude-code-config.show_metadata*
+show_metadata         Whether to display metadata (cost, duration, session ID)
+                      at the top of the output. Only applies when output_format
+                      is "json". Default: false
+
+                                                         *claude-code-config.debug*
+debug                 Enable debug logging to see detailed execution
+                      information. Default: false
+
+Example configuration: >lua
   require('claude-code').setup({
-    -- Path to Claude Code CLI executable
-    claude_path = vim.fn.expand('~/.claude/local/claude'),
-
-    -- Default options for Claude CLI
-    claude_options = '',
-
-    -- File path for custom CLAUDE.md memory file
-    memory_path = vim.fn.expand('~/.claude/CLAUDE.md'),
-
-    -- Whether to use a floating window for output (true) or buffer (false)
-    use_floating = true,
-
-    -- Max height/width of floating window as percentage of screen
-    float_height_pct = 0.8,
-    float_width_pct = 0.8,
-
-    -- Whether to show thinking in extended mode
-    show_thinking = false,
-
-    -- Default MCP server to use (if any)
-    mcp_server = nil,
-
-    -- Whether to enable debug mode (--debug)
-    debug_mode = false,
-
-    -- Whether to enable MCP debug mode (--mcp-debug)
-    mcp_debug = false,
-
-    -- Whether to log Claude CLI invocations to a log file
-    log_commands = true,
-
-    -- Path for Claude CLI log file
-    log_file = nil, -- defaults to stdpath("cache")/claude_cli.log
-
-    -- Output format: "text" (default), "json", or "stream-json"
-    output_format = 'text',
-
-    -- Allowed tools (comma or space-separated list like "Bash Edit")
-    allowed_tools = nil,
-
-    -- Whether to use JSON parsing for programmatic access to responses
-    parse_json = false,
-
-    -- Default Git base branch for PR comparisons
-    git_base_branch = 'main',
-
-    -- Request timeout in seconds
-    timeout = 60,
-
-    -- Minimum required Claude CLI version (semver)
-    min_version = '0.2.70',
+    timeout = 180000,  -- 3 minute timeout
+    split_direction = "vertical",
+    output_format = "json",  -- structured output with metadata
+    show_metadata = true  -- display cost and timing info
   })
 <
 
-================================================================================
-COMMANDS                                             *claude-code-commands*
+==============================================================================
+API                                                              *claude-code-api*
 
-*:ClaudeReview*
-  Review selected code with Claude (visual mode).
+                                                               *claude-code.setup()*
+setup({config})       Initialize the plugin with optional configuration.
+                      Parameters:
+                      - {config} (table|nil): Configuration options
 
-*:ClaudeCommit*
-  Generate a git commit message with Claude based on staged changes.
+                                                                 *claude-code.run()*
+run({prompt})         Run Claude with a prompt and return the response.
+                      Parameters:
+                      - {prompt} (string): The prompt to send to Claude
+                      Returns:
+                      - (string): Claude's response
+                      - (table|nil): Metadata when output_format is "json"
 
-*:ClaudePR*
-  Generate a pull request description with Claude based on branch diff.
+                                                       *claude-code.claude_command()*
+claude_command({args})  Execute the Claude command (used internally).
+                        Parameters:
+                        - {args} (string): Command arguments
 
-*:ClaudeExplain*
-  Explain selected code with Claude (visual mode).
-
-*:ClaudeRefactor*
-  Refactor selected code with Claude (visual mode).
-
-*:ClaudeDebug*
-  Debug selected code with Claude (visual mode).
-  Prompts for error message.
-
-*:ClaudeTest*
-  Generate tests for selected code with Claude (visual mode).
-
-*:ClaudeMemory*
-  Edit Claude Memory file.
-
-*:ClaudeCodebase*
-  Get codebase overview with Claude.
-
-*:Claude* {prompt}
-  Ask Claude a question.
-
-*:ClaudeTemplateEdit* [template]
-  Edit a template. If no template name is provided, shows a selection menu.
-
-*:ClaudeTemplateReset* [template]
-  Reset a template to default. If no template name is provided, shows a menu.
-
-*:ClaudeTemplateList*
-  List all available templates.
-
-================================================================================
-KEYBINDINGS                                         *claude-code-keybindings*
-
-Claude Code adds keybindings under <leader>a namespace for AI operations:
-
-Normal mode:~
-  <leader>ac  - Generate commit message with Claude
-  <leader>ap  - Generate PR description with Claude
-  <leader>am  - Edit Claude Memory file
-  <leader>ao  - Get codebase overview with Claude
-  <leader>aq  - Ask Claude a question (opens command with prompt)
-  <leader>ate - Edit Claude template
-  <leader>atr - Reset Claude template to default
-  <leader>atl - List all Claude templates
-
-Visual mode:~
-  <leader>ar  - Review selected code with Claude
-  <leader>ae  - Explain selected code with Claude
-  <leader>af  - Refactor selected code with Claude
-  <leader>ad  - Debug selected code with Claude
-  <leader>at  - Generate tests for selected code with Claude
-
-================================================================================
-TEMPLATES                                           *claude-code-templates*
-
-Claude Code uses customizable templates for different operations. Templates
-are stored in `{config_dir}/templates/claude-code/` with .tpl extension.
-
-Available templates:
-
-- commit: Generate git commit messages
-- pr: Generate pull request descriptions
-- review: Code review
-- debug: Debug assistance
-- explain: Code explanation
-- refactor: Code refactoring
-- test: Test generation
-- codebase: Codebase overview
-
-You can edit templates via `:ClaudeTemplateEdit` command or directly edit the
-files in the templates directory.
-
-Templates support these placeholders:
-
-- {{code}}: The selected code
-- {{filepath}}: The current file path
-- {{filetype}}: The current file type
-- {{diff}}: Git diff for commit messages
-- {{changes}}: Changes for PR descriptions
-- {{error}}: Error message for debugging
-
-================================================================================
-LICENSE                                               *claude-code-license*
-
-MIT License
-
-Copyright (c) 2024 Paul Hubert
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
